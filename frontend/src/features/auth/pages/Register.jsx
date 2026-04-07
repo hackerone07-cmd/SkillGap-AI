@@ -1,17 +1,19 @@
 import React, { useState } from "react";
 import { Link,useNavigate} from "react-router";
-
+import { useAuth } from "../hooks/useAuth";
 
 const Register = () => {
-    const nevigate= useNavigate();
+    const navigate= useNavigate();
   const [formData, setFormData] = useState({
-    name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
+
+  const {loading,handleRegister}= useAuth();
 
   const validate = () => {
     const newErrors = {};
@@ -41,21 +43,17 @@ const Register = () => {
     setErrors({});
     setServerError("");
 
-    try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+    const username = formData.username;
+    const email =formData.email;
+    const password= formData.password;
+    await handleRegister({username,email,password})
+    navigate("/Dashboard")
 
-      if (!response.ok) throw new Error("Registration failed. Try again.");
-
-      const data = await response.json();
-      localStorage.setItem("token", data.token);
-    } catch (err) {
-      setServerError(err.message);
-    }
   };
+
+ if(loading){
+  return (<main><h1>Loading...</h1></main>)
+}
 
   return (
     <div id="form-container">

@@ -2,12 +2,15 @@
 import React, { useState } from "react";
 import "../auth.form.scss"
 import { useNavigate,Link } from "react-router";
-
+import { useAuth } from "../hooks/useAuth";
 
 
 const Login = () => {
+
+
+  const {loading,handleLogin} = useAuth();
     
-const nevigate  = useNavigate();
+const navigate  = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
@@ -24,31 +27,32 @@ const nevigate  = useNavigate();
     return newErrors;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    setErrors({});
-    setServerError("");
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+  const validationErrors = validate();
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    return;
+  }
 
-      if (!response.ok) throw new Error("Invalid credentials or server error");
+  try {
+    await handleLogin({
+      email: email.trim(),
+      password: password.trim()
+    });
 
-      const data = await response.json();
-      localStorage.setItem("token", data.token);
-    } catch (err) {
-      setServerError(err.message);
-    }
-  };
+    navigate("/dashboard");
+  } catch (err) {
+    setServerError(err.message || "Login failed");
+  }
+};
+
+
+if(loading){
+  return (<main><h1>Loading...</h1></main>)
+}
+    
 
   return (
     <div id="form-container">

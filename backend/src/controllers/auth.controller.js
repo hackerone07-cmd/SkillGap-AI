@@ -35,6 +35,7 @@ const registerUserController = asyncHandler(async (req, res) => {
     { id: user._id, username: user.username },
     process.env.JWT_SECRET,
     { expiresIn: "1d" }
+    
   );
 
   res.cookie("token", token, {
@@ -93,7 +94,8 @@ const loginUserController = asyncHandler(async (req, res) => {
   res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
+    sameSite: "strict",
+     maxAge: 24 * 60 * 60 * 1000
   });
 
   res.status(200).json(
@@ -140,8 +142,10 @@ const logoutUserController = asyncHandler(async (req, res) => {
  * 
  */
 const getMeController = asyncHandler(async(req,res) => {
-   const user = await userModel.findById(req.user._id)
-
+   const user = await userModel.findById(req.user.id)
+if (!user) {
+  throw new ApiError(404, "User not found");
+}
    res.status(200).json(
   new ApiResponse(
     200,

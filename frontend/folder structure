@@ -1,0 +1,15 @@
+## UI
+ => components
+ =>pages
+
+## Hooks  =>for  managing state and api layers
+=> hooks
+
+## state   => like data store
+=> auth.context.jsx
+=>ai.context.jsx
+
+
+## Api  => for communication with backend
+=>services
+  => auth.api.jsx

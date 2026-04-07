@@ -1,6 +1,8 @@
 import { createBrowserRouter } from "react-router";
 import Login from "./features/auth/pages/Login";
 import Register from "./features/auth/pages/Register";
+import Home from "./features/auth/pages/Home";
+import Dashboard from "./features/auth/pages/Dashboard";
 
 
 const router = createBrowserRouter([
@@ -11,6 +13,13 @@ const router = createBrowserRouter([
     {
          path: "/register",
         element: <Register/>
+    },
+    {
+        path: "/",
+        element: <Home/>
+    },{
+         path: "/Dashboard",
+        element: <Dashboard/>
     }
 ]);
 
