@@ -1,5 +1,5 @@
-import { useContext, useEffect } from "react";
-import { AuthContext  } from "../AuthContext";
+import { useContext } from "react";
+import { AUTH_SESSION_KEY, AuthContext  } from "../AuthContext";
 import { login,register,logout,getme } from "../services/auth.api";
 
 
@@ -12,8 +12,15 @@ export const useAuth = () =>{
 
   try {
     const data = await login({ email, password });
-    setUser(data.user);
-    return { success: true };
+    const user = data?.data?.user;
+
+    if (!user) {
+      return { success: false, message: "User data not found" };
+    }
+
+    localStorage.setItem(AUTH_SESSION_KEY, "true");
+    setUser(user);
+    return { success: true, user };
   } catch (error) {
     return { success: false, message: error.message };
   } finally {
@@ -25,8 +32,15 @@ export const useAuth = () =>{
   setLoading(true);
   try {
     const data = await register({ username, email, password });
-    setUser(data.user);
-   return { success: true };
+    const user = data?.data?.user;
+
+    if (!user) {
+      return { success: false, message: "User data not found" };
+    }
+
+    localStorage.setItem(AUTH_SESSION_KEY, "true");
+    setUser(user);
+   return { success: true, user };
   } catch (error) {
     return { success: false, message: error.message };
   } finally {
@@ -37,6 +51,7 @@ export const useAuth = () =>{
   setLoading(true);
   try {
     await logout();
+    localStorage.removeItem(AUTH_SESSION_KEY);
     setUser(null);
   } catch (error) {
      return { success: false, message: error.message };
@@ -44,17 +59,30 @@ export const useAuth = () =>{
     setLoading(false);
   }
 };
-useEffect(() => {
-  const checkAuth = async () => {
+
+const handlegetme = async ()=>{
+    setLoading(true);
     try {
       const data = await getme();
-      setUser(data.user);
-    } catch (error) {
-      setUser(null);
-    }
-  };
+      const user = data?.data?.user;
 
-  checkAuth();
-}, []);
-     return {user,loading,handleLogin,handleLogout,handleRegister}
+      if (!user) {
+        localStorage.removeItem(AUTH_SESSION_KEY);
+        setUser(null);
+        return { success: false, message: "User data not found" };
+      }
+
+      localStorage.setItem(AUTH_SESSION_KEY, "true");
+      setUser(user);
+      return { success: true, user };
+    } catch (error) {
+      localStorage.removeItem(AUTH_SESSION_KEY);
+      setUser(null);
+      return { success: false, message: error.message };
+    } finally {
+      setLoading(false);
+    }
+  }
+
+     return {user,loading,handleLogin,handleLogout,handleRegister,handlegetme}
 }

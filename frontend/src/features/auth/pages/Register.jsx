@@ -8,7 +8,6 @@ const Register = () => {
     username: "",
     email: "",
     password: "",
-    confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
@@ -17,7 +16,7 @@ const Register = () => {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (!formData.username.trim()) newErrors.username = "Username is required";
 
     if (!formData.email) newErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Invalid email format";
@@ -25,8 +24,6 @@ const Register = () => {
     if (!formData.password) newErrors.password = "Password is required";
     else if (formData.password.length < 6) newErrors.password = "Password must be at least 6 characters";
 
-    if (!formData.confirmPassword) newErrors.confirmPassword = "Confirm your password";
-    else if (formData.confirmPassword !== formData.password) newErrors.confirmPassword = "Passwords do not match";
 
     return newErrors;
   };
@@ -47,7 +44,7 @@ const Register = () => {
     const email =formData.email;
     const password= formData.password;
     await handleRegister({username,email,password})
-    navigate("/Dashboard")
+    navigate("/")
 
   };
 
@@ -65,9 +62,9 @@ const Register = () => {
         <input
           id="name-input"
           type="text"
-          name="name"
-          placeholder="Full Name"
-          value={formData.name}
+          name="username"
+          placeholder="Username"
+          value={formData.username}
           onChange={handleChange}
         />
         {errors.name && <p id="name-error">{errors.name}</p>}
@@ -91,16 +88,6 @@ const Register = () => {
           onChange={handleChange}
         />
         {errors.password && <p id="password-error">{errors.password}</p>}
-
-        <input
-          id="confirm-password-input"
-          type="password"
-          name="confirmPassword"
-          placeholder="Confirm Password"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-        />
-        {errors.confirmPassword && <p id="confirm-password-error">{errors.confirmPassword}</p>}
 
         <button id="form-button" type="submit">Register</button>
      <p id="p">Already have an account? <Link id="a" to={"/login"}>Login</Link></p>

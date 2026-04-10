@@ -1,0 +1,285 @@
+.resume-analyzer {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  font-family: system-ui, sans-serif;
+
+  // ─── Header ───────────────────────────────────────────
+  &__header {
+    margin-bottom: 2rem;
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #111;
+      margin: 0 0 4px;
+    }
+
+    p {
+      font-size: 14px;
+      color: #666;
+      margin: 0;
+    }
+  }
+
+  // ─── Grid Layout ──────────────────────────────────────
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  // ─── Card ─────────────────────────────────────────────
+  &__card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.25rem;
+
+    &--full {
+      grid-column: 1 / -1;
+      margin-bottom: 16px;
+    }
+  }
+
+  // ─── Card Label ───────────────────────────────────────
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 10px;
+
+    svg {
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+  }
+
+  // ─── Textarea ─────────────────────────────────────────
+  &__textarea {
+    width: 100%;
+    min-height: 148px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #111;
+    background: #f9fafb;
+    resize: vertical;
+    line-height: 1.65;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+
+    &:focus {
+      border-color: #a3a3a3;
+    }
+
+    &--job {
+      min-height: 140px;
+    }
+  }
+
+  // ─── Char Hint ────────────────────────────────────────
+  &__char-hint {
+    font-size: 12px;
+    color: #bbb;
+    text-align: right;
+    margin-top: 5px;
+  }
+
+  // ─── Upload Zone ──────────────────────────────────────
+  &__upload-zone {
+    border: 1.5px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 1.75rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    background: #f9fafb;
+    transition: all 0.15s;
+
+    &:hover {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+    }
+
+    &--dragging {
+      border-color: #6366f1;
+      background: #f5f3ff;
+    }
+
+    &--has-file {
+      border-style: solid;
+      border-color: #3b82f6;
+      background: #eff6ff;
+    }
+  }
+
+  &__upload-icon {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+    opacity: 0.45;
+  }
+
+  &__upload-text {
+    font-size: 13px;
+    color: #666;
+
+    strong {
+      color: #111;
+      font-weight: 500;
+    }
+
+    &--hint {
+      margin-top: 3px;
+    }
+  }
+
+  &__file-name {
+    font-size: 13px;
+    color: #3b82f6;
+    font-weight: 500;
+    margin-top: 6px;
+  }
+
+  // ─── Hidden File Input ────────────────────────────────
+  &__file-input {
+    display: none;
+  }
+
+  // ─── Error Message ────────────────────────────────────
+  &__error {
+    font-size: 13px;
+    color: #dc2626;
+    padding: 8px 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+
+  // ─── Button Row ───────────────────────────────────────
+  &__btn-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+  }
+
+  // ─── Generate Button ──────────────────────────────────
+  &__btn-generate {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+
+    &:hover:not(:disabled) {
+      opacity: 0.85;
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    &:disabled {
+      background: #d1d5db;
+      cursor: not-allowed;
+    }
+  }
+
+  // ─── Spinner ──────────────────────────────────────────
+  &__spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  // ─── Result Card ──────────────────────────────────────
+  &__result {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.25rem;
+
+    &-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    &-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    &-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      display: inline-block;
+    }
+
+    &-copy-btn {
+      font-size: 12px;
+      background: none;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 3px 10px;
+      cursor: pointer;
+      color: #888;
+      font-family: inherit;
+      transition: background 0.15s;
+
+      &:hover {
+        background: #f3f4f6;
+      }
+    }
+
+    &-divider {
+      height: 1px;
+      background: #f3f4f6;
+      margin: 10px 0 14px;
+    }
+
+    &-body {
+      font-size: 14px;
+      color: #1a1a1a;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

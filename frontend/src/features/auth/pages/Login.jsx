@@ -29,6 +29,7 @@ const navigate  = useNavigate();
 
  const handleSubmit = async (e) => {
   e.preventDefault();
+  setServerError("");
 
   const validationErrors = validate();
   if (Object.keys(validationErrors).length > 0) {
@@ -36,16 +37,17 @@ const navigate  = useNavigate();
     return;
   }
 
-  try {
-    await handleLogin({
+  const result = await handleLogin({
       email: email.trim(),
       password: password.trim()
     });
 
-    navigate("/dashboard");
-  } catch (err) {
-    setServerError(err.message || "Login failed");
+  if (result.success) {
+    navigate("/");
+    return;
   }
+
+  setServerError(result.message || "Login failed");
 };
 
 
