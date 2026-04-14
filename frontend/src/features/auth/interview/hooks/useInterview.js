@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { getAllInterviewReports,generateInterviewReport, getInterviewReportById } from "../services/interview.api";
+import { getAllInterviewReports,generateInterviewReport, getInterviewReportById,generateResumePdf } from "../services/interview.api";
 import { InterviewContext } from "../InterviewContext";
 
 
@@ -58,5 +58,33 @@ export const useInterview = () =>{
         }
      }
 
-     return {loading, report, reports,getAllReports,generateReport,getReportById}
+
+   const getResumePdf = async (interviewReportId) => {
+    setLoading(true);
+    try {
+        const response = await generateResumePdf(interviewReportId);
+        const url = window.URL.createObjectURL(new Blob([response], { type: "application/pdf" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `resume_${interviewReportId}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+
+    } catch (error) {
+        console.error("Generate resume PDF error:", error);
+
+        // Relay the retry hint to the UI
+        if (error?.statusCode === 429) {
+            throw {
+                ...error,
+                userMessage: `AI service is busy. Please try again in ${error.retryDelay || "a minute"}.`,
+            };
+        }
+        throw error;
+    } finally {
+        setLoading(false);
+    }
+};
+     return {loading, report, reports,getAllReports,generateReport,getReportById,getResumePdf}
 }

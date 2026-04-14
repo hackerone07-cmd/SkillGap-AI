@@ -3,6 +3,7 @@ import { authUser } from "../middlewares/auth.middlewares.js";
 import { generateInterviewReportController } from "../controllers/interview.controller.js";
 import { getInterviewReportByIdController } from "../controllers/interview.controller.js";
 import { getAllInterviewReportController } from "../controllers/interview.controller.js";
+import { generateResumePdfController } from "../controllers/interview.controller.js";
 import upload from "../middlewares/file.middleware.js";
 
 const interviewRouter = Router();
@@ -32,5 +33,13 @@ interviewRouter.get("/report/:interviewId",authUser, getInterviewReportByIdContr
  * @access Private
  */
 interviewRouter.get("/",authUser, getAllInterviewReportController)
+
+
+/**
+ * @route GET /api/interview/resume/pdf/:interviewReportId
+ * @description generate resume pdf on the basis of the user self description, and the job description
+ * @access Private
+ */
+interviewRouter.get("/resume/pdf/:interviewReportId",authUser, generateResumePdfController) 
 
 export default interviewRouter

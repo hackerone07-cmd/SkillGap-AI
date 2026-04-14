@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import tokenBlacklistModel from "../models/blackList.model.js";
-import { ApiError } from "../utils/apiError.js";
+import { ApiError } from "../utils/ApiError.js";
 
 export async function authUser(req, res, next) {
   try {

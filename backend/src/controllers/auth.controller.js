@@ -6,6 +6,17 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
 
+function getCookieOptions() {
+  const isProduction = process.env.NODE_ENV === "production";
+
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    maxAge: 24 * 60 * 60 * 1000,
+  };
+}
+
 /**
  * @name registerUserController
  * @description This controller will handle the registration of a new user.
@@ -38,11 +49,7 @@ const registerUserController = asyncHandler(async (req, res) => {
     
   );
 
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
-  });
+  res.cookie("token", token, getCookieOptions());
 
   res.status(201).json(
     new ApiResponse(
@@ -91,12 +98,7 @@ const loginUserController = asyncHandler(async (req, res) => {
     { expiresIn: "1d" }
   );
 
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-     maxAge: 24 * 60 * 60 * 1000
-  });
+  res.cookie("token", token, getCookieOptions());
 
   res.status(200).json(
     new ApiResponse(
@@ -128,7 +130,7 @@ const logoutUserController = asyncHandler(async (req, res) => {
     await tokenBlacklistModel.create({ token });
   }
 
-  res.clearCookie("token");
+  res.clearCookie("token", getCookieOptions());
 
   res.status(200).json(
     new ApiResponse(200, {}, "User logged out successfully")
