@@ -1,8 +1,8 @@
 import { createContext, useEffect, useState } from "react";
 import { getme } from "./services/auth.api";
+import { AUTH_TOKEN_KEY } from "./auth.constants";
 
 export const AuthContext = createContext();
-export const AUTH_SESSION_KEY = "auth_session_active";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -12,9 +12,9 @@ export const AuthProvider = ({ children }) => {
     let isMounted = true;
 
     const restoreSession = async () => {
-      const hasSessionHint = localStorage.getItem(AUTH_SESSION_KEY) === "true";
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
 
-      if (!hasSessionHint) {
+      if (!token) {
         if (isMounted) {
           setLoading(false);
         }
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
           setUser(user ?? null);
         }
       } catch {
-        localStorage.removeItem(AUTH_SESSION_KEY);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
         if (isMounted) {
           setUser(null);
         }

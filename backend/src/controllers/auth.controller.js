@@ -55,6 +55,7 @@ const registerUserController = asyncHandler(async (req, res) => {
     new ApiResponse(
       201,
       {
+        token,
         user: {
           id: user._id,
           username: user.username,
@@ -104,6 +105,7 @@ const loginUserController = asyncHandler(async (req, res) => {
     new ApiResponse(
       200,
       {
+        token,
         user: {
           id: user._id,
           username: user.username,
@@ -124,7 +126,9 @@ const loginUserController = asyncHandler(async (req, res) => {
  */
 const logoutUserController = asyncHandler(async (req, res) => {
 
-  const token = req.cookies.token;
+  const token =
+    req.cookies?.token ||
+    req.headers.authorization?.split(" ")[1];
 
   if (token) {
     await tokenBlacklistModel.create({ token });

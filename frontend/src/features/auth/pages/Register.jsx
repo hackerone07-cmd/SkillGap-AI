@@ -43,8 +43,14 @@ const Register = () => {
     const username = formData.username;
     const email =formData.email;
     const password= formData.password;
-    await handleRegister({username,email,password})
-    navigate("/")
+    const result = await handleRegister({username,email,password});
+
+    if (result.success) {
+      navigate("/");
+      return;
+    }
+
+    setServerError(result.message || "Registration failed");
 
   };
 
