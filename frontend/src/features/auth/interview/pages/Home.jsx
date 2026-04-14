@@ -1,5 +1,7 @@
-import { useRef, useState } from "react";
-import "../../interview/home.scss";
+import { useRef, useState, useEffect } from "react";
+import "../../interview/style/home.scss";
+import { useInterview } from "../hooks/useInterview.js";
+import { useNavigate } from "react-router";
 
 // Icons
 const IconFile = () => (
@@ -34,6 +36,22 @@ const IconUpload = () => (
 const IconArrow = () => (
   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
     <path d="M3 8h10M9 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconEye = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+    <circle cx="12" cy="12" r="3"></circle>
+  </svg>
+);
+
+const IconCalendar = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+    <line x1="16" y1="2" x2="16" y2="6"></line>
+    <line x1="8" y1="2" x2="8" y2="6"></line>
+    <line x1="3" y1="10" x2="21" y2="10"></line>
   </svg>
 );
 
@@ -94,32 +112,84 @@ const UploadZone = ({ file, onFile }) => {
   );
 };
 
-const ResultCard = ({ result, onCopy }) => (
-  <div className="resume-analyzer__result">
-    <div className="resume-analyzer__result-header">
-      <div className="resume-analyzer__result-title">
-        <span className="resume-analyzer__result-status-dot" />
-        Analysis
+// Report Card Component
+const ReportCard = ({ report, onView }) => {
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getScoreColor = (score) => {
+    if (score >= 85) return "#10b981";
+    if (score >= 70) return "#f59e0b";
+    return "#ef4444";
+  };
+
+  return (
+    <div className="resume-analyzer__report-card">
+      <div className="resume-analyzer__report-header">
+        <h3 className="resume-analyzer__report-title">{report.jobTitle}</h3>
+        <div
+          className="resume-analyzer__report-score"
+          style={{ backgroundColor: getScoreColor(report.matchScore) }}
+        >
+          {report.matchScore}%
+        </div>
       </div>
-      <button className="resume-analyzer__result-copy-btn" onClick={onCopy}>
-        Copy
+      
+      <div className="resume-analyzer__report-meta">
+        <span className="resume-analyzer__report-meta-item">
+          <IconCalendar /> {formatDate(report.createdAt)}
+        </span>
+      </div>
+
+      <p className="resume-analyzer__report-description">
+        {report.jobDescription?.substring(0, 100)}...
+      </p>
+
+      <button
+        className="resume-analyzer__report-btn"
+        onClick={() => onView(report._id)}
+      >
+        <IconEye /> View Report
+        <IconArrow />
       </button>
     </div>
-    <div className="resume-analyzer__result-divider" />
-    <div className="resume-analyzer__result-body">{result}</div>
-  </div>
-);
+  );
+};
 
 // Main component
 export default function Home() {
+  const navigate = useNavigate();
+
+  const { loading, generateReport, reports, getAllReports } = useInterview();
+
   const [pdfFile, setPdfFile] = useState(null);
+  const [jobTitle, setJobTitle] = useState("");
   const [selfDesc, setSelfDesc] = useState("");
   const [jobDesc, setJobDesc] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState("");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    const loadReports = async () => {
+      try {
+        await getAllReports();
+      } catch (err) {
+        console.error("Failed to load reports:", err);
+      }
+    };
+    loadReports();
+  }, []);
+
   const validate = () => {
+    if (!jobTitle.trim()) {
+      setError("Please enter the job title.");
+      return false;
+    }
+
     if (!selfDesc.trim() && !pdfFile) {
       setError("Please upload your resume or fill in the 'About you' field.");
       return false;
@@ -130,35 +200,36 @@ export default function Home() {
       return false;
     }
 
+    setError("");
     return true;
   };
 
-  const handleGenerate = async () => {
-    if (!validate()) {
-      return;
-    }
-
-    setError("");
-    setIsLoading(true);
-    setResult("");
-
+  const handleGenerate = async() => {
+    if (!validate()) return;
     try {
-      // TODO: Replace with your actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1800));
-      setResult(
-        `Match Score: 8/10\n\nYour profile aligns strongly with the listed requirements.\n\nKey Strengths\n- Relevant experience in the required domain\n- Strong problem-solving demonstrated in your background\n- Good cultural fit based on your self-description\n\nGaps to Address\n- Highlight leadership experience more explicitly\n- Mention specific tools or certifications\n\nTalking Points\n1. Lead with your most relevant project or achievement\n2. Quantify your impact wherever possible\n3. Show enthusiasm for the company's mission\n\nSuggested Cover Letter Opening\n"With a background in [your field] and a passion for [relevant area], I am excited to bring my skills to [Company Name]."`
-      );
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setIsLoading(false);
+      const data = await generateReport({ 
+        jobTitle, 
+        jobDescription: jobDesc, 
+        selfDescription: selfDesc, 
+        resumeFile: pdfFile 
+      });
+      if (data && data._id) {
+        navigate(`/interview/${data._id}`);
+      } else {
+        setError("Failed to generate report. Please try again.");
+      }
+    } catch (err) {
+      setError(err.message || "Failed to generate report. Please try again.");
     }
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(result).catch(() => {});
+  const handleViewReport = (reportId) => {
+    navigate(`/interview/${reportId}`);
   };
 
+  if (loading) {
+    return <main><h1>Loading your interview plan</h1></main>;
+  }
   return (
     <div className="resume-analyzer">
       <div className="resume-analyzer__header">
@@ -167,6 +238,22 @@ export default function Home() {
       </div>
 
       <div className="resume-analyzer__grid">
+        <div className="resume-analyzer__card" style={{gridColumn: "1 / -1"}}>
+          <div className="resume-analyzer__label">
+            <IconDoc /> Job Title <span style={{color: "red", fontWeight: "bold"}}>*</span>
+          </div>
+          <input
+            type="text"
+            className="resume-analyzer__textarea"
+            placeholder="e.g., Senior React Developer, Full Stack Engineer..."
+            value={jobTitle}
+            onChange={(e) => setJobTitle(e.target.value)}
+            maxLength={200}
+            required
+          />
+          <div className="resume-analyzer__char-hint">{jobTitle.length} / 200</div>
+        </div>
+
         <div className="resume-analyzer__card">
           <div className="resume-analyzer__label">
             <IconFile /> Resume (PDF)
@@ -180,7 +267,7 @@ export default function Home() {
           </div>
           <textarea
             className="resume-analyzer__textarea"
-            rows={6}
+            rows={5}
             placeholder="Briefly describe yourself - your background, strengths, career goals, and what makes you a strong candidate..."
             value={selfDesc}
             onChange={(e) => setSelfDesc(e.target.value)}
@@ -208,14 +295,30 @@ export default function Home() {
       {error && <div className="resume-analyzer__error">{error}</div>}
 
       <div className="resume-analyzer__btn-row">
-        <button className="resume-analyzer__btn-generate" onClick={handleGenerate} disabled={isLoading}>
-          {isLoading && <span className="resume-analyzer__spinner" />}
-          {isLoading ? "Analyzing..." : "Generate analysis"}
-          {!isLoading && <IconArrow />}
+        <button className="resume-analyzer__btn-generate" onClick={handleGenerate}>
+          Generate analysis
+          <IconArrow />
         </button>
       </div>
 
-      {result && <ResultCard result={result} onCopy={handleCopy} />}
+      {reports && reports.length > 0 && (
+        <section className="resume-analyzer__reports-section">
+          <div className="resume-analyzer__reports-header">
+            <h2>Your Generated Reports ({reports.length})</h2>
+            <p>Access your previous interview analysis reports</p>
+          </div>
+          
+          <div className="resume-analyzer__reports-grid">
+            {reports.map((report) => (
+              <ReportCard
+                key={report._id}
+                report={report}
+                onView={handleViewReport}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

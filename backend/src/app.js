@@ -4,28 +4,9 @@ import cookieParser from 'cookie-parser';
 import authRouter from './routes/auth.route.js';
 import interviewRouter from "./routes/interview.route.js"
 import cors from "cors"
+import { ApiError } from './utils/ApiError.js';
 const app = express();
 
-function formatError(err) {
-  let message = err.message || "Something went wrong";
-  let statusCode = err.statusCode || 500;
-
-  try {
-    const parsed = JSON.parse(message);
-    const apiError = parsed?.error;
-
-    if (apiError?.message) {
-      message = apiError.message;
-    }
-
-    if (apiError?.code) {
-      statusCode = apiError.code;
-    }
-  } catch {
-  }
-
-  return { message, statusCode };
-}
 app.use(cookieParser());
 
 app.use(express.json());
@@ -43,11 +24,27 @@ app.use('/api/interview',interviewRouter)
 
 /* GLOBAL ERROR HANDLER — MUST BE LAST */
 app.use((err, req, res, next) => {
-  const { message, statusCode } = formatError(err);
+  // Check if it's an ApiError instance
+  if (err instanceof ApiError) {
+    return res.status(err.statusCode).json({
+      success: err.success,
+      statusCode: err.statusCode,
+      message: err.message,
+      errors: err.errors || [],
+      data: err.data
+    });
+  }
+
+  // Handle other errors
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Something went wrong";
 
   res.status(statusCode).json({
     success: false,
+    statusCode,
     message,
+    errors: [],
+    data: null
   });
 });
 

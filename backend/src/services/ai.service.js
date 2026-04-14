@@ -15,6 +15,8 @@ function getAiClient() {
 }
 
 const interviewReportSchema = z.object({
+    jobTitle: z.string().min(1),
+
     matchScore: z.number().min(0).max(100),
 
     technicalQuestions: z.array(
@@ -156,6 +158,7 @@ function normalizeInterviewReport(data = {}) {
 
     return {
         ...data,
+        jobTitle: text(data.jobTitle, "Unspecified Position"),
         matchScore:
             typeof data.matchScore === "number" && data.matchScore >= 0 && data.matchScore <= 100
                 ? data.matchScore
@@ -167,26 +170,29 @@ function normalizeInterviewReport(data = {}) {
     };
 }
 
-async function generateAiInterviewReport({ resume, jobDescription, selfDescription }) {
+async function generateAiInterviewReport({ jobTitle, resume, jobDescription, selfDescription }) {
     const ai = getAiClient();
 
     const prompt = `
-Return ONLY JSON.
+Return ONLY valid JSON with the following structure:
 
-matchScore = number from 0 to 100
+{
+  "jobTitle": "${jobTitle}",
+  "matchScore": <number 0-100>,
+  "technicalQuestions": [{ "question", "intention", "answer" }, ...],
+  "behavioralQuestions": [{ "question", "intention", "answer" }, ...],
+  "skillGap": [{ "skill", "severity": "low|medium|high", "type" }, ...],
+  "preparationPlan": [{ "day": <number>, "focus", "tasks": [<string>, ...] }, ...]
+}
 
-technicalQuestions, behavioralQuestions = array of objects:
-{ question, intention, answer }
+REQUIREMENTS:
+- Include EXACTLY the jobTitle: "${jobTitle}"
+- matchScore must be a number between 0 and 100
+- Return at least 10 technicalQuestions, 5 behavioralQuestions, 1 skillGap item, and 7 preparationPlan items
+- Do NOT return arrays of strings; each item must be a proper object
+- All string values must be non-empty
 
-skillGap = array of objects:
-{ skill, severity: low|medium|high, type }
-
-preparationPlan = array of objects:
-{ day, focus, tasks }
-
-Return at least 3 technicalQuestions, 3 behavioralQuestions, 1 skillGap, and 3 preparationPlan items.
-Do NOT return arrays of strings.
-
+Job Title: ${jobTitle}
 Job Description: ${jobDescription}
 Resume: ${resume}
 Self Description: ${selfDescription}

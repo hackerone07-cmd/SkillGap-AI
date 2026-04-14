@@ -2,6 +2,7 @@ import mongoose from "mongoose"
 
 
 /**
+ * -job title: string
  * -job description schema : string
  * -resume text  : string
  * - self description : string
@@ -103,6 +104,10 @@ const preparationPlanSchema = new mongoose.Schema({
     }]
 },{_id: false})
 const interviewReportSchema = new mongoose.Schema({
+    jobTitle:{
+        type: String,
+        required: [true, "job title is required"]
+    },
     jobDescription:{
         type: String,
         required: [true, "job description is required"]
