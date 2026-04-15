@@ -150,6 +150,11 @@ CLIENT_URLS=https://your-frontend-domain.vercel.app
 
 If you add a custom frontend domain later, include it in `CLIENT_URLS`. Multiple origins are supported as a comma-separated list.
 
+Puppeteer note for Render:
+- The backend now runs a `postinstall` step to download Chrome during deploy.
+- Chrome is cached inside `backend/.cache/puppeteer` so Render can use it at runtime.
+- If an older Render service is still failing, trigger a fresh deploy so the new postinstall step runs.
+
 ### Frontend on Vercel
 
 - Root directory: `frontend`

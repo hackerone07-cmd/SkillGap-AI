@@ -226,7 +226,12 @@ async function generatePdfFromHtml(htmlContent){
         throw new Error("Resume HTML was empty");
     }
 
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: process.env.NODE_ENV === "production"
+            ? ["--no-sandbox", "--disable-setuid-sandbox"]
+            : [],
+    });
     const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
     const pdfBuffer = await page.pdf({ format: "A4",margin:{top:"15mm",bottom:"15mm",left:"10mm",right:"10mm"} });
