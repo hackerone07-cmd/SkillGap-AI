@@ -5,6 +5,15 @@ import {interviewReportModel} from "../models/interviewReport.model.js"
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
+const getAuthenticatedUserId = (req) => {
+    const userId = req.user?.id || req.user?._id;
+
+    if (!userId) {
+        throw new ApiError(401, "User not authenticated");
+    }
+
+    return userId;
+};
 
 export const generateInterviewReportController =asyncHandler(async (req, res) =>{
      if (!req.file) {
@@ -27,8 +36,9 @@ export const generateInterviewReportController =asyncHandler(async (req, res) =>
         jobDescription
      });
    console.log("AI RAW RESPONSE:", interviewReportByAi);
+     const userId = getAuthenticatedUserId(req);
      const interviewReport = await interviewReportModel.create({
-          user: req.user?._id,
+          user: userId,
           jobTitle,
             jobDescription,
         resume: resumeContent.text,
@@ -45,10 +55,11 @@ export const generateInterviewReportController =asyncHandler(async (req, res) =>
 
 export const getInterviewReportByIdController = asyncHandler(async (req, res) =>{
     const {interviewId} = req.params
+    const userId = getAuthenticatedUserId(req);
 
     const interviewReport = await interviewReportModel.findOne({
         _id: interviewId,
-        user: req.user?._id
+        user: userId
     });
 
     if(!interviewReport){
@@ -61,9 +72,10 @@ export const getInterviewReportByIdController = asyncHandler(async (req, res) =>
 })
 
 export const getAllInterviewReportController = asyncHandler(async (req, res) =>{
+    const userId = getAuthenticatedUserId(req);
 
     const interviewReports = await interviewReportModel.find({
-        user: req.user?._id
+        user: userId
     }).sort({ createdAt: -1 }).select("-__v -user -resume -jobDescription -selfDescription -technicalQuestions -behavioralQuestions -skillGap -preparationPlan -skillGap -preparationPlan");
 
     if(!interviewReports || interviewReports.length === 0){
@@ -77,9 +89,11 @@ export const getAllInterviewReportController = asyncHandler(async (req, res) =>{
 
 export const generateResumePdfController = asyncHandler(async(req,res) =>{
 const {interviewReportId} = req.params
+const userId = getAuthenticatedUserId(req);
 
-const interviewReport = await interviewReportModel.findById({
+const interviewReport = await interviewReportModel.findOne({
     _id: interviewReportId,
+    user: userId,
 });
 
 if(!interviewReport){
