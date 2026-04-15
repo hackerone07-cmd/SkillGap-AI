@@ -202,7 +202,7 @@ Self Description: ${selfDescription}
 `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.1-flash-lite-preview",
         contents: prompt,
     });
 
@@ -303,7 +303,7 @@ You are an expert career assistant. Your task is to generate a concise, ATS-frie
 
             
     const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.1-flash-lite-preview",
         contents: prompt,
         config:{
             responseMimeType: "application/json",
