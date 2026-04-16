@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link,useNavigate} from "react-router";
+import { Link,useNavigate, Navigate } from "react-router";
 import { useAuth } from "../hooks/useAuth";
 import "../auth.form.scss";
 import PageLoader from "../../../components/PageLoader";
@@ -14,7 +14,7 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
 
-  const {isInitializing, isAuthenticating, handleRegister}= useAuth();
+  const {user, isInitializing, isAuthenticating, handleRegister}= useAuth();
 
   const validate = () => {
     const newErrors = {};
@@ -48,7 +48,7 @@ const Register = () => {
     const result = await handleRegister({username,email,password});
 
     if (result.success) {
-      navigate("/");
+      navigate("/workspace");
       return;
     }
 
@@ -64,6 +64,10 @@ const Register = () => {
       description="We’re making sure your workspace is ready for a new account."
     />
   )
+}
+
+if (user) {
+  return <Navigate to="/workspace" replace />;
 }
 
   return (

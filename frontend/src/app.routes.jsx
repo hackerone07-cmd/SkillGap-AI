@@ -1,11 +1,16 @@
 import { createBrowserRouter } from "react-router";
 import Login from "./features/auth/pages/Login";
 import Register from "./features/auth/pages/Register";
+import Landing from "./features/auth/pages/landing";
 import Home from "./features/auth/interview/pages/Home";
 import Protected from "./features/auth/components/Protected";
 import Interview from "./features/auth/interview/pages/Interview";
 
 const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Landing />,
+  },
   {
     path: "/login",
     element: <Login />,
@@ -15,7 +20,7 @@ const router = createBrowserRouter([
     element: <Register />,
   },
   {
-    path: "/",
+    path: "/workspace",
     element: (
       <Protected>
         <Home />

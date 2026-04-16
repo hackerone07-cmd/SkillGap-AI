@@ -279,7 +279,7 @@ export default function Home() {
       return;
     }
 
-    navigate("/login");
+    navigate("/");
   };
 
   const jumpToWorkspace = () => {

@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import "../auth.form.scss"
-import { useNavigate,Link } from "react-router";
+import { useNavigate,Link, Navigate } from "react-router";
 import { useAuth } from "../hooks/useAuth";
 import PageLoader from "../../../components/PageLoader";
 
@@ -9,7 +9,7 @@ import PageLoader from "../../../components/PageLoader";
 const Login = () => {
 
 
-  const {isInitializing, isAuthenticating, handleLogin} = useAuth();
+  const {user, isInitializing, isAuthenticating, handleLogin} = useAuth();
     
 const navigate  = useNavigate();
   const [email, setEmail] = useState("");
@@ -45,7 +45,7 @@ const navigate  = useNavigate();
     });
 
   if (result.success) {
-    navigate("/");
+    navigate("/workspace");
     return;
   }
 
@@ -60,6 +60,10 @@ if(isInitializing){
       description="We’re checking whether you already have an active session."
     />
   )
+}
+
+if (user) {
+  return <Navigate to="/workspace" replace />;
 }
     
 
