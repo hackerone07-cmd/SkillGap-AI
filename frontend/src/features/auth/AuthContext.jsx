@@ -1,12 +1,12 @@
-import { createContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getme } from "./services/auth.api";
 import { AUTH_TOKEN_KEY } from "./auth.constants";
-
-export const AuthContext = createContext();
+import { AuthContext } from "./auth.context";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
 
       if (!token) {
         if (isMounted) {
-          setLoading(false);
+          setIsInitializing(false);
         }
         return;
       }
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
         }
       } finally {
         if (isMounted) {
-          setLoading(false);
+          setIsInitializing(false);
         }
       }
     };
@@ -48,7 +48,17 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, setLoading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+        isInitializing,
+        setIsInitializing,
+        isAuthenticating,
+        setIsAuthenticating,
+        loading: isInitializing || isAuthenticating,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

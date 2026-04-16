@@ -1,14 +1,22 @@
 import React from 'react'
 import { useAuth } from '../hooks/useAuth.js'
 import { Navigate } from 'react-router'
+import PageLoader from '../../../components/PageLoader.jsx'
 
 
 const Protected = ({children}) => {
 
-    const {loading, user} = useAuth();
+    const {isInitializing, user} = useAuth();
 
-   console.log(user)
-    if(loading) return (<main><h1>Loading...</h1></main>)
+    if(isInitializing) {
+      return (
+        <PageLoader
+          eyebrow="Restoring session"
+          title="Preparing your workspace"
+          description="We’re confirming your account and loading the interview dashboard."
+        />
+      )
+    }
  if(!user) 
     return <Navigate  to={"/login"}/>
  

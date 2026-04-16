@@ -27,7 +27,10 @@
         formData.append("jobTitle", jobTitle);
         formData.append("jobDescription", jobDescription);
         formData.append("selfDescription", selfDescription);
-        formData.append("resume", resumeFile);
+
+        if (resumeFile) {
+            formData.append("resume", resumeFile);
+        }
 
         try {
             const response = await api.post("/api/interview/", formData, {

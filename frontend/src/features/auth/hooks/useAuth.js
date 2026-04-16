@@ -1,15 +1,22 @@
 import { useContext } from "react";
-import { AuthContext  } from "../AuthContext";
+import { AuthContext  } from "../auth.context";
 import { AUTH_TOKEN_KEY } from "../auth.constants";
 import { login,register,logout,getme } from "../services/auth.api";
 
 
 export const useAuth = () =>{
       const context = useContext(AuthContext);
-     const { user, setUser, loading, setLoading } = context;
+     const {
+      user,
+      setUser,
+      loading,
+      isInitializing,
+      isAuthenticating,
+      setIsAuthenticating,
+     } = context;
 
    const handleLogin = async ({ email, password }) => {
-  setLoading(true);
+  setIsAuthenticating(true);
 
   try {
     const data = await login({ email, password });
@@ -26,12 +33,12 @@ export const useAuth = () =>{
   } catch (error) {
     return { success: false, message: error.message };
   } finally {
-    setLoading(false);
+    setIsAuthenticating(false);
   }
 };
 
   const handleRegister = async ({ username, email, password }) => {
-  setLoading(true);
+  setIsAuthenticating(true);
   try {
     const data = await register({ username, email, password });
     const user = data?.data?.user;
@@ -47,24 +54,25 @@ export const useAuth = () =>{
   } catch (error) {
     return { success: false, message: error.message };
   } finally {
-    setLoading(false);
+    setIsAuthenticating(false);
   }
 };
       const handleLogout = async () => {
-  setLoading(true);
+  setIsAuthenticating(true);
   try {
     await logout();
     localStorage.removeItem(AUTH_TOKEN_KEY);
     setUser(null);
+    return { success: true };
   } catch (error) {
      return { success: false, message: error.message };
   } finally {
-    setLoading(false);
+    setIsAuthenticating(false);
   }
 };
 
 const handlegetme = async ()=>{
-    setLoading(true);
+    setIsAuthenticating(true);
     try {
       const data = await getme();
       const user = data?.data?.user;
@@ -82,9 +90,18 @@ const handlegetme = async ()=>{
       setUser(null);
       return { success: false, message: error.message };
     } finally {
-      setLoading(false);
+      setIsAuthenticating(false);
     }
   }
 
-     return {user,loading,handleLogin,handleLogout,handleRegister,handlegetme}
+     return {
+      user,
+      loading,
+      isInitializing,
+      isAuthenticating,
+      handleLogin,
+      handleLogout,
+      handleRegister,
+      handlegetme,
+     }
 }

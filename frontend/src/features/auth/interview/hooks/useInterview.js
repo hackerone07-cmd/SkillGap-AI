@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { getAllInterviewReports,generateInterviewReport, getInterviewReportById,generateResumePdf } from "../services/interview.api";
-import { InterviewContext } from "../InterviewContext";
+import { InterviewContext } from "../interview.context";
 
 
 export const useInterview = () =>{
@@ -9,11 +9,25 @@ export const useInterview = () =>{
     if(!context) {
        throw new Error("useInterview must be in the ")
     }
-     const {loading, setLoading,report, setReport, reports, setReports}  = context
+     const {
+        loading,
+        report,
+        setReport,
+        reports,
+        setReports,
+        isReportsLoading,
+        setIsReportsLoading,
+        isReportLoading,
+        setIsReportLoading,
+        isGenerating,
+        setIsGenerating,
+        isDownloadingResume,
+        setIsDownloadingResume,
+     }  = context
 
 
      const generateReport = async({jobTitle, jobDescription, selfDescription, resumeFile }) => {
-        setLoading(true)
+        setIsGenerating(true)
 
         try {
             const response = await generateInterviewReport({jobTitle, jobDescription, selfDescription, resumeFile})
@@ -23,12 +37,12 @@ export const useInterview = () =>{
             console.error("Generate report error:", error);
             throw error;
         }finally{
-            setLoading(false);
+            setIsGenerating(false);
         }
      }
 
      const getReportById = async(interviewId)=>{
-        setLoading(true)
+        setIsReportLoading(true)
 
         try {
             const response = await getInterviewReportById(interviewId)
@@ -38,12 +52,12 @@ export const useInterview = () =>{
             console.error("Get report error:", error);
             throw error;
         }finally{
-            setLoading(false)
+            setIsReportLoading(false)
         }
      }
 
      const getAllReports = async() =>{
-        setLoading(true)
+        setIsReportsLoading(true)
         try{
             const response = await getAllInterviewReports()
             const reportsData = Array.isArray(response.data) ? response.data : (Array.isArray(response) ? response : []);
@@ -54,13 +68,13 @@ export const useInterview = () =>{
            setReports([]);
            return [];
         }finally{
-            setLoading(false)
+            setIsReportsLoading(false)
         }
      }
 
 
    const getResumePdf = async (interviewReportId) => {
-    setLoading(true);
+    setIsDownloadingResume(true);
     try {
         const response = await generateResumePdf(interviewReportId);
         const url = window.URL.createObjectURL(new Blob([response], { type: "application/pdf" }));
@@ -83,8 +97,20 @@ export const useInterview = () =>{
         }
         throw error;
     } finally {
-        setLoading(false);
+        setIsDownloadingResume(false);
     }
 };
-     return {loading, report, reports,getAllReports,generateReport,getReportById,getResumePdf}
+     return {
+        loading,
+        report,
+        reports,
+        isReportsLoading,
+        isReportLoading,
+        isGenerating,
+        isDownloadingResume,
+        getAllReports,
+        generateReport,
+        getReportById,
+        getResumePdf,
+     }
 }

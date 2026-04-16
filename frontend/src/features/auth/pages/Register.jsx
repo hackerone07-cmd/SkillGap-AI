@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link,useNavigate} from "react-router";
 import { useAuth } from "../hooks/useAuth";
+import "../auth.form.scss";
+import PageLoader from "../../../components/PageLoader";
 
 const Register = () => {
     const navigate= useNavigate();
@@ -12,7 +14,7 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
 
-  const {loading,handleRegister}= useAuth();
+  const {isInitializing, isAuthenticating, handleRegister}= useAuth();
 
   const validate = () => {
     const newErrors = {};
@@ -54,14 +56,22 @@ const Register = () => {
 
   };
 
- if(loading){
-  return (<main><h1>Loading...</h1></main>)
+ if(isInitializing){
+  return (
+    <PageLoader
+      eyebrow="Session check"
+      title="Setting up registration"
+      description="We’re making sure your workspace is ready for a new account."
+    />
+  )
 }
 
   return (
     <div id="form-container">
       <form onSubmit={handleSubmit} id="form-box">
-        <h2 id="form-title">Register</h2>
+        <p id="form-kicker">Interview Prep Workspace</p>
+        <h2 id="form-title">Create your account</h2>
+        <p id="form-subtitle">Start saving role-fit analyses, interview questions, and preparation roadmaps.</p>
 
         {serverError && <p id="server-error">{serverError}</p>}
 
@@ -73,7 +83,7 @@ const Register = () => {
           value={formData.username}
           onChange={handleChange}
         />
-        {errors.name && <p id="name-error">{errors.name}</p>}
+        {errors.username && <p id="name-error">{errors.username}</p>}
 
         <input
           id="email-input"
@@ -95,8 +105,10 @@ const Register = () => {
         />
         {errors.password && <p id="password-error">{errors.password}</p>}
 
-        <button id="form-button" type="submit">Register</button>
-     <p id="p">Already have an account? <Link id="a" to={"/login"}>Login</Link></p>
+        <button id="form-button" type="submit" disabled={isAuthenticating}>
+          {isAuthenticating ? "Creating account..." : "Create workspace"}
+        </button>
+     <p id="p">Already have an account? <Link id="a" to={"/login"}>Sign in</Link></p>
       </form>
     </div>
   );

@@ -3,12 +3,13 @@ import React, { useState } from "react";
 import "../auth.form.scss"
 import { useNavigate,Link } from "react-router";
 import { useAuth } from "../hooks/useAuth";
+import PageLoader from "../../../components/PageLoader";
 
 
 const Login = () => {
 
 
-  const {loading,handleLogin} = useAuth();
+  const {isInitializing, isAuthenticating, handleLogin} = useAuth();
     
 const navigate  = useNavigate();
   const [email, setEmail] = useState("");
@@ -36,6 +37,7 @@ const navigate  = useNavigate();
     setErrors(validationErrors);
     return;
   }
+  setErrors({});
 
   const result = await handleLogin({
       email: email.trim(),
@@ -50,16 +52,23 @@ const navigate  = useNavigate();
   setServerError(result.message || "Login failed");
 };
 
-
-if(loading){
-  return (<main><h1>Loading...</h1></main>)
+if(isInitializing){
+  return (
+    <PageLoader
+      eyebrow="Session check"
+      title="Opening sign in"
+      description="We’re checking whether you already have an active session."
+    />
+  )
 }
     
 
   return (
     <div id="form-container">
       <form onSubmit={handleSubmit} id="form-box">
-        <h2 id="form-title">Login</h2>
+        <p id="form-kicker">Interview Prep Workspace</p>
+        <h2 id="form-title">Welcome back</h2>
+        <p id="form-subtitle">Sign in to continue building focused, role-specific interview plans.</p>
 
         {serverError && <p id="server-error">{serverError}</p>}
 
@@ -81,8 +90,10 @@ if(loading){
         />
         {errors.password && <p id="password-error">{errors.password}</p>}
 
-        <button id="form-button" type="submit">Login</button>
-         <p id="p">don't have an account? <Link id="a" to={"/register"}>Register</Link></p>
+        <button id="form-button" type="submit" disabled={isAuthenticating}>
+          {isAuthenticating ? "Signing in..." : "Continue to workspace"}
+        </button>
+         <p id="p">Don't have an account? <Link id="a" to={"/register"}>Create one</Link></p>
       </form>
      
     </div>
