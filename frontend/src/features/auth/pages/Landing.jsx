@@ -1,7 +1,7 @@
 import { Link, Navigate } from "react-router";
 import { useAuth } from "../hooks/useAuth";
 import PageLoader from "../../../components/PageLoader";
-import "../style/landing.scss";
+import "../style/Landing.scss"
 
 const IconArrow = () => (
   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
