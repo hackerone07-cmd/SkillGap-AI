@@ -175,31 +175,95 @@ function normalizeInterviewReport(data = {}) {
 
 async function generateAiInterviewReport({ jobTitle, resume, jobDescription, selfDescription }) {
     const ai = getAiClient();
+`You are an expert technical interviewer and career coach with deep knowledge of hiring processes across the tech industry.
 
-    const prompt = `
-Return ONLY valid JSON with the following structure:
+## TASK
+Analyze the candidate's profile against the job description and generate a comprehensive interview preparation package. Return ONLY valid JSON — no markdown, no code fences, no explanations.
+
+## INPUTS
+- Job Title: ${jobTitle}
+- Job Description: ${jobDescription}
+- Candidate Resume: ${resume}
+- Candidate Self-Description: ${selfDescription}
+
+## OUTPUT SCHEMA
+Return a single JSON object with this EXACT structure — no additional fields:
 
 {
   "jobTitle": "${jobTitle}",
-  "matchScore": <number 0-100>,
-  "technicalQuestions": [{ "question", "intention", "answer" }, ...],
-  "behavioralQuestions": [{ "question", "intention", "answer" }, ...],
-  "skillGap": [{ "skill", "severity": "low|medium|high", "type" }, ...],
-  "preparationPlan": [{ "day": <number>, "focus", "tasks": [<string>, ...] }, ...]
+  "matchScore": <integer 0–100>,
+
+  "technicalQuestions": [
+    {
+      "question": "<specific, role-relevant technical question>",
+      "intention": "<what the interviewer is testing with this question>",
+      "answer": "<detailed model answer: explain the concept, walk through the approach, include examples or pseudocode where helpful>"
+    }
+  ],
+
+  "behavioralQuestions": [
+    {
+      "question": "<STAR-format behavioral question>",
+      "intention": "<what trait or competency this tests>",
+      "answer": "<model answer using STAR structure: Situation → Task → Action → Result>"
+    }
+  ],
+
+  "skillGap": [
+    {
+      "skill": "<missing or weak skill name>",
+      "severity": "low|medium|high",
+      "type": "<technical|soft|domain>"
+    }
+  ],
+
+  "preparationPlan": [
+    {
+      "day": <number>,
+      "focus": "<main theme for the day>",
+      "tasks": ["<specific actionable task with time estimate>", ...]
+    }
+  ]
 }
 
-REQUIREMENTS:
-- Include EXACTLY the jobTitle: "${jobTitle}"
-- matchScore must be a number between 0 and 100
-- Return at least 10 technicalQuestions, 5 behavioralQuestions, 1 skillGap item, and 7 preparationPlan items
-- Do NOT return arrays of strings; each item must be a proper object
-- All string values must be non-empty
+## CONTENT REQUIREMENTS
 
-Job Title: ${jobTitle}
-Job Description: ${jobDescription}
-Resume: ${resume}
-Self Description: ${selfDescription}
-`;
+### matchScore
+- Score 0–100 based on overlap of required skills, experience level, domain knowledge, and job title alignment
+- Be honest: a junior candidate applying for a senior role should score 30–50, not 80+
+
+### technicalQuestions — generate EXACTLY 12
+- Cover: core CS fundamentals, role-specific tools/frameworks, system design (if senior), and at least 2 questions targeting gaps between the resume and job description
+- Vary difficulty across easy, medium, and hard
+- Answers must be thorough: step-by-step reasoning, real-world context, and inline examples where applicable
+
+### behavioralQuestions — generate EXACTLY 6
+- Map each question to one competency: leadership, conflict resolution, ownership, adaptability, communication, or problem-solving
+- STAR answers must feel realistic and specific — avoid vague or generic responses
+
+### skillGap
+- Identify ALL meaningful gaps between the resume and job description
+- Minimum 3 items — include every real gap found
+- severity rules:
+  - "high"   → required skill is completely missing from the resume
+  - "medium" → skill is partially present or mentioned briefly
+  - "low"    → skill exists but needs deepening or updating
+- type must be one of: "technical", "soft", or "domain"
+
+### preparationPlan
+- Length: 7 days if matchScore ≥ 70 | 10 days if matchScore 50–69 | 14 days if matchScore < 50
+- Day 1: self-assessment + review job description + identify top 3 weak areas
+- Final day: full mock interview simulation + confidence review + rest
+- Each day must have 3–5 tasks with realistic time estimates (e.g. "Practice 3 LeetCode medium graph problems (90 min)")
+- Structure must build logically: fundamentals → role-specific skills → interview practice → mock rounds
+
+## STRICT OUTPUT RULES
+- Start with { and end with } — no text before or after
+- Every field in the schema must be present
+- No extra fields beyond what is defined in the schema
+- All string values must be non-empty
+- No trailing commas
+- Must be parseable by JSON.parse()`;
 
     const response = await ai.models.generateContent({
         model: "gemini-3.1-flash-lite-preview",
@@ -284,27 +348,47 @@ async function generateResumePdf({ jobTitle,resume, jobDescription, selfDescript
 
     const ai = getAiClient();
 
-    const prompt = `
-Generate a resume for the candidate in html format based on the following information. Focus on highlighting the candidate's strengths and tailoring the content to the job description.
+    const prompt =`You are an expert resume writer and career coach specializing in ATS-optimized resumes.
 
-Return ONLY the HTML content of the resume without any additional text or explanations.
+## TASK
+Generate a tailored, one-page resume in clean HTML for the candidate below. The output must be valid HTML only — no markdown, no explanations, no code fences.
 
-Job Title: ${jobTitle}
-Resume: ${resume}
-Job Description: ${jobDescription}
-Self Description: ${selfDescription}
-You are an expert career assistant. Your task is to generate a concise, ATS-friendly one-page resume in clean HTML format make it one page only . Follow these guidelines:
+## INPUTS
+- Job Title: ${jobTitle}
+- Target Job Description: ${jobDescription}
+- Candidate's Existing Resume: ${resume}
+- Candidate's Self-Description: ${selfDescription}
 
-- Tailor the resume to align with the job description while preserving the users authentic experience and skills.
-- Highlight the most relevant technical skills, projects, and achievements.
-- Use clear section headers: Contact Information, Summary, Skills, Projects/Experience, Education.
-- Keep formatting simple and professional: semantic HTML tags (<header>, <section>, <ul>, <li>, <p>).
-- Apply minimal inline CSS for spacing, font size, and bold headers (no external libraries).
-- Ensure the resume fits on one page when converted to PDF.
-- Optimize for ATS parsing (no tables, images, or complex layouts).
-- Output only valid HTML code, ready for conversion into PDF via Puppeteer.
+## RESUME STRUCTURE (use exactly in this order)
+1. **Contact Information** — name, email, phone, LinkedIn/GitHub (if provided)
+2. **Professional Summary** — 2–3 sentences tailored to the job; lead with years of experience and top strengths
+3. **Technical Skills** — grouped by category (e.g., Languages, Frameworks, Tools); keyword-match the job description
+4. **Experience / Projects** — reverse chronological; each entry has: title, company/context, dates, and 2–4 bullet points using strong action verbs + measurable outcomes (e.g., "Reduced load time by 40%")
+5. **Education** — degree, institution, graduation year
 
-            `;
+## HTML & STYLING RULES
+- Use semantic tags: <header>, <section>, <h1>, <h2>, <h3>, <ul>, <li>, <p>
+- Apply ONLY inline CSS — no <style> blocks, no external libraries, no frameworks
+- Font: font-family: Arial, sans-serif; base font-size: 11px; line-height: 1.4
+- Margins: keep <body> margin to 20px max on all sides to preserve one-page fit
+- Section headers: bold, font-size 13px, border-bottom: 1px solid #333, margin-bottom: 4px
+- Color: black text on white background only (ATS-safe)
+- NO tables, NO images, NO icons, NO multi-column layouts, NO floats
+
+## ATS OPTIMIZATION RULES
+- Mirror exact keywords and phrases from the job description (skills, tools, job titles)
+- Avoid headers the ATS won't recognize — use only the section names listed above
+- Do not use symbols like ★, ✓, or custom bullet characters — use standard <li> bullets
+- Spell out abbreviations at least once (e.g., "Application Programming Interface (API)")
+
+## ONE-PAGE PDF CONSTRAINT
+- Total content must fit within a standard A4/Letter page when rendered at 96dpi via Puppeteer
+- If content is too long: trim older/less-relevant experience, shorten bullet points, reduce margins
+- Never truncate contact info, the summary, or education
+
+## OUTPUT FORMAT
+Return ONLY the raw HTML starting with <!DOCTYPE html> and ending with </html>.
+Do not include any text before or after the HTML.`;
 
             
     const response = await ai.models.generateContent({
