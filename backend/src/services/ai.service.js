@@ -348,10 +348,11 @@ async function generateResumePdf({ jobTitle,resume, jobDescription, selfDescript
 
     const ai = getAiClient();
 
-    const prompt =`You are an expert resume writer and career coach specializing in ATS-optimized resumes.
+    const prompt =`You are a professional resume writer with 15+ years of experience crafting ATS-optimized resumes that pass automated screening and impress human recruiters.
 
 ## TASK
-Generate a tailored, one-page resume in clean HTML for the candidate below. The output must be valid HTML only — no markdown, no explanations, no code fences.
+Generate a tailored, one-page resume in clean HTML for the candidate below.
+Output must be valid HTML only — no markdown, no explanations, no code fences, no commentary.
 
 ## INPUTS
 - Job Title: ${jobTitle}
@@ -359,36 +360,73 @@ Generate a tailored, one-page resume in clean HTML for the candidate below. The 
 - Candidate's Existing Resume: ${resume}
 - Candidate's Self-Description: ${selfDescription}
 
-## RESUME STRUCTURE (use exactly in this order)
-1. **Contact Information** — name, email, phone, LinkedIn/GitHub (if provided)
-2. **Professional Summary** — 2–3 sentences tailored to the job; lead with years of experience and top strengths
-3. **Technical Skills** — grouped by category (e.g., Languages, Frameworks, Tools); keyword-match the job description
-4. **Experience / Projects** — reverse chronological; each entry has: title, company/context, dates, and 2–4 bullet points using strong action verbs + measurable outcomes (e.g., "Reduced load time by 40%")
-5. **Education** — degree, institution, graduation year
+## RESUME STRUCTURE (follow this order exactly)
+1. Contact Information — full name, email, phone, LinkedIn URL, GitHub URL (only include what is provided)
+2. Professional Summary — 2–3 sentences; open with years of experience + top 2 strengths; close with value proposition tied directly to the job title
+3. Technical Skills — grouped by category (Languages, Frameworks, Tools, Databases, Cloud, etc.); include every keyword from the job description that the candidate legitimately has
+4. Work Experience / Projects — reverse chronological; for each entry include: job title, company name, location, start–end dates (Month YYYY), and 2–4 bullet points
+5. Education — degree name, major, institution, graduation year (Month YYYY)
+
+## LANGUAGE & GRAMMAR RULES  ← fixes Spelling & Grammar issues
+- Use American English spelling throughout (e.g. "optimized" not "optimised")
+- Every sentence must be grammatically complete and correctly punctuated
+- Bullet points must NOT end with a period — keep them parallel in structure
+- Use past tense for all previous roles; use present tense only for current role
+- Proofread mentally: no double spaces, no orphaned commas, no broken phrases
+- Never use first-person pronouns (I, me, my, we) anywhere in the resume
+
+## REPETITION RULES  ← fixes Repetition issue
+- Each action verb may appear AT MOST ONCE across all bullet points — vary verbs throughout
+- Do not repeat the same skill, tool, or technology in both the Skills section and bullet points unless it adds essential context
+- Do not use the same sentence structure more than twice in a row across bullet points
+- Banned overused words: "responsible for", "worked on", "helped", "assisted", "utilized", "leveraged" — replace with specific action verbs (built, architected, reduced, automated, shipped, integrated, etc.)
+
+## ATS PARSE RATE RULES  ← fixes ATS Parse Rate issue
+- Use ONLY standard section labels: "Contact Information", "Professional Summary", "Technical Skills", "Work Experience", "Education"
+- All text must be in standard HTML text nodes — no text inside CSS, attributes, or pseudo-elements
+- No special Unicode characters, smart quotes (" "), em dashes (—), or non-ASCII symbols — use plain ASCII only (", -, |)
+- Do not embed text in background-image, content CSS properties, or aria-label attributes
+- Every <a> href must be a valid, complete URL if links are included
+
+## TAILORING RULES  ← fixes Tailoring score
+- Extract the top 8–10 required skills/tools from the job description and ensure ALL of them appear verbatim in the resume (in Skills section or bullet points) if the candidate has them
+- Match the seniority language of the job description (e.g. if it says "lead", use "led" in bullets)
+- The Professional Summary must mention the exact job title: ${jobTitle}
+- At least 3 bullet points across Work Experience must directly reflect responsibilities listed in the job description
+- If the job description emphasizes a specific domain (e.g. fintech, healthcare, e-commerce), reflect that domain context in the summary or bullets
+
+## QUANTIFICATION RULES
+- At least 50% of bullet points must include a measurable result: percentage, time saved, users served, revenue impact, performance improvement, team size, etc.
+- Format numbers consistently: use % for percentages, use K/M for large numbers (e.g. "10K users", "$2M pipeline")
+- If the candidate's resume lacks metrics, infer reasonable estimates based on context — do not fabricate specifics, but frame scope (e.g. "across a team of 5 engineers" or "serving 50K+ monthly users")
 
 ## HTML & STYLING RULES
-- Use semantic tags: <header>, <section>, <h1>, <h2>, <h3>, <ul>, <li>, <p>
-- Apply ONLY inline CSS — no <style> blocks, no external libraries, no frameworks
-- Font: font-family: Arial, sans-serif; base font-size: 11px; line-height: 1.4
-- Margins: keep <body> margin to 20px max on all sides to preserve one-page fit
-- Section headers: bold, font-size 13px, border-bottom: 1px solid #333, margin-bottom: 4px
-- Color: black text on white background only (ATS-safe)
-- NO tables, NO images, NO icons, NO multi-column layouts, NO floats
+- Semantic tags only: <header>, <section>, <h1>, <h2>, <h3>, <ul>, <li>, <p>, <span>, <strong>
+- Inline CSS only — no <style> blocks, no <link> tags, no external libraries
+- font-family: Arial, sans-serif | base font-size: 11px | line-height: 1.4 | color: #000
+- <body> margin: 18px | padding: 0 | background: #fff
+- Section <h2>: font-size: 13px | font-weight: bold | border-bottom: 1px solid #333 | margin: 8px 0 4px 0 | text-transform: uppercase | letter-spacing: 0.5px
+- Bullet <li>: margin: 2px 0 | padding-left: 4px
+- NO tables, NO images, NO SVG, NO icons, NO floats, NO flexbox, NO grid, NO multi-column layouts
+- NO <br> tags for spacing — use margin instead
 
-## ATS OPTIMIZATION RULES
-- Mirror exact keywords and phrases from the job description (skills, tools, job titles)
-- Avoid headers the ATS won't recognize — use only the section names listed above
-- Do not use symbols like ★, ✓, or custom bullet characters — use standard <li> bullets
-- Spell out abbreviations at least once (e.g., "Application Programming Interface (API)")
+## ONE-PAGE CONSTRAINT
+- Content must fit a standard A4 page (794px × 1123px) at 96dpi when rendered by Puppeteer
+- If content is too long: remove roles older than 10 years, trim bullets to 1 line each, reduce section spacing to margin: 4px 0
+- Never cut: name, contact details, summary, or education
 
-## ONE-PAGE PDF CONSTRAINT
-- Total content must fit within a standard A4/Letter page when rendered at 96dpi via Puppeteer
-- If content is too long: trim older/less-relevant experience, shorten bullet points, reduce margins
-- Never truncate contact info, the summary, or education
+## FINAL SELF-CHECK (apply before outputting)
+Before writing the HTML, mentally verify:
+1. All job description keywords are present ✓
+2. No action verb is repeated more than once ✓
+3. No spelling errors or grammatical mistakes ✓
+4. At least half the bullets have a quantified result ✓
+5. No special characters or non-ASCII symbols ✓
+6. Section headers match ATS-standard names exactly ✓
 
 ## OUTPUT FORMAT
-Return ONLY the raw HTML starting with <!DOCTYPE html> and ending with </html>.
-Do not include any text before or after the HTML.`;
+Return ONLY raw HTML starting with <!DOCTYPE html> and ending with </html>.
+Absolutely no text, comment, or character before <!DOCTYPE or after </html>.`;
 
             
     const response = await ai.models.generateContent({
