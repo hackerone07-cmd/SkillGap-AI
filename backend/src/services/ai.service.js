@@ -175,7 +175,7 @@ function normalizeInterviewReport(data = {}) {
 
 async function generateAiInterviewReport({ jobTitle, resume, jobDescription, selfDescription }) {
     const ai = getAiClient();
-`You are an expert technical interviewer and career coach with deep knowledge of hiring processes across the tech industry.
+const prompt = `You are an expert technical interviewer and career coach with deep knowledge of hiring processes across the tech industry.
 
 ## TASK
 Analyze the candidate's profile against the job description and generate a comprehensive interview preparation package. Return ONLY valid JSON — no markdown, no code fences, no explanations.
