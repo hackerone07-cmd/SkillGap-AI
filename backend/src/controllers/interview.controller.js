@@ -87,6 +87,28 @@ export const getAllInterviewReportController = asyncHandler(async (req, res) =>{
     );
 })
 
+export const deleteInterviewReportController = asyncHandler(async (req, res) => {
+    const { interviewId } = req.params;
+    const userId = getAuthenticatedUserId(req);
+
+    const deletedInterviewReport = await interviewReportModel.findOneAndDelete({
+        _id: interviewId,
+        user: userId,
+    });
+
+    if (!deletedInterviewReport) {
+        throw new ApiError(404, "Interview report not found");
+    }
+
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            { _id: deletedInterviewReport._id },
+            "Interview report deleted successfully"
+        )
+    );
+})
+
 export const generateResumePdfController = asyncHandler(async(req,res) =>{
 const {interviewReportId} = req.params
 const userId = getAuthenticatedUserId(req);

@@ -4,6 +4,7 @@ import { generateInterviewReportController } from "../controllers/interview.cont
 import { getInterviewReportByIdController } from "../controllers/interview.controller.js";
 import { getAllInterviewReportController } from "../controllers/interview.controller.js";
 import { generateResumePdfController } from "../controllers/interview.controller.js";
+import { deleteInterviewReportController } from "../controllers/interview.controller.js";
 import upload from "../middlewares/file.middleware.js";
 
 const interviewRouter = Router();
@@ -24,6 +25,13 @@ interviewRouter.post("/",authUser, upload.single("resume"), generateInterviewRep
  * @access Private
  */
 interviewRouter.get("/report/:interviewId",authUser, getInterviewReportByIdController)
+
+/**
+ * @route DELETE /api/interview/report/:interviewId
+ * @description delete interview report by id
+ * @access Private
+ */
+interviewRouter.delete("/report/:interviewId", authUser, deleteInterviewReportController)
 
 
 

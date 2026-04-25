@@ -70,6 +70,15 @@
         }
     }   
 
+    export const deleteInterviewReport = async(interviewId) => {
+        try {
+            const response = await api.delete(`/api/interview/report/${interviewId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
+    }
+
 
   export const generateResumePdf = async (interviewReportId) => {
     try {

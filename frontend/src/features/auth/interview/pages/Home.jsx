@@ -46,6 +46,15 @@ const IconEye = () => (
   </svg>
 );
 
+const IconTrash = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <path d="M3 6h18" strokeLinecap="round" />
+    <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+    <path d="M19 6l-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+    <path d="M10 11v6M14 11v6" strokeLinecap="round" />
+  </svg>
+);
+
 const IconCalendar = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -125,7 +134,7 @@ const UploadZone = ({ file, onFile }) => {
   );
 };
 
-const ReportCard = ({ report, onView }) => {
+const ReportCard = ({ report, onView, onDeleteClick, isDeleting }) => {
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -154,12 +163,24 @@ const ReportCard = ({ report, onView }) => {
           <IconCalendar />
           {formatDate(report.createdAt)}
         </span>
-        <span
-          className="resume-analyzer__report-chip"
-          style={{ color: scoreTone.color, backgroundColor: `${scoreTone.color}14` }}
-        >
-          {scoreTone.label}
-        </span>
+        <div className="resume-analyzer__report-actions">
+          <span
+            className="resume-analyzer__report-chip"
+            style={{ color: scoreTone.color, backgroundColor: `${scoreTone.color}14` }}
+          >
+            {scoreTone.label}
+          </span>
+          <button
+            type="button"
+            className="resume-analyzer__report-icon-btn"
+            onClick={() => onDeleteClick(report)}
+            disabled={isDeleting}
+            aria-label={`Delete ${report.jobTitle} report`}
+            title="Delete report"
+          >
+            <IconTrash />
+          </button>
+        </div>
       </div>
 
       <div className="resume-analyzer__report-header">
@@ -196,13 +217,15 @@ export default function Home() {
   const workspaceRef = useRef(null);
 
   const { user, handleLogout } = useAuth();
-  const { isGenerating, isReportsLoading, generateReport, reports, getAllReports } = useInterview();
+  const { isGenerating, isReportsLoading, generateReport, reports, getAllReports, removeReport } = useInterview();
 
   const [pdfFile, setPdfFile] = useState(null);
   const [jobTitle, setJobTitle] = useState("");
   const [selfDesc, setSelfDesc] = useState("");
   const [jobDesc, setJobDesc] = useState("");
   const [error, setError] = useState("");
+  const [reportPendingDelete, setReportPendingDelete] = useState(null);
+  const [deletingReportId, setDeletingReportId] = useState("");
 
   const loadReports = useEffectEvent(async () => {
     try {
@@ -284,6 +307,32 @@ export default function Home() {
 
   const jumpToWorkspace = () => {
     workspaceRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleDeleteRequest = (report) => {
+    setError("");
+    setReportPendingDelete(report);
+  };
+
+  const handleDeleteCancel = () => {
+    if (deletingReportId) return;
+    setReportPendingDelete(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!reportPendingDelete?._id) return;
+
+    setDeletingReportId(reportPendingDelete._id);
+    setError("");
+
+    try {
+      await removeReport(reportPendingDelete._id);
+      setReportPendingDelete(null);
+    } catch (err) {
+      setError(err.message || "Failed to delete the report. Please try again.");
+    } finally {
+      setDeletingReportId("");
+    }
   };
 
   return (
@@ -530,7 +579,13 @@ export default function Home() {
         ) : reportsCount > 0 ? (
           <div className="resume-analyzer__reports-grid">
             {reports.map((report) => (
-              <ReportCard key={report._id} report={report} onView={handleViewReport} />
+              <ReportCard
+                key={report._id}
+                report={report}
+                onView={handleViewReport}
+                onDeleteClick={handleDeleteRequest}
+                isDeleting={deletingReportId === report._id}
+              />
             ))}
           </div>
         ) : (
@@ -540,6 +595,44 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      {reportPendingDelete && (
+        <div className="resume-analyzer__modal-backdrop" role="presentation">
+          <div
+            className="resume-analyzer__modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-report-title"
+          >
+            <div className="resume-analyzer__modal-icon" aria-hidden="true">
+              <IconTrash />
+            </div>
+            <h3 id="delete-report-title">Delete this report?</h3>
+            <p>
+              This will permanently remove <strong>{reportPendingDelete.jobTitle}</strong> from your saved
+              reports.
+            </p>
+            <div className="resume-analyzer__modal-actions">
+              <button
+                type="button"
+                className="resume-analyzer__ghost-btn resume-analyzer__ghost-btn--modal"
+                onClick={handleDeleteCancel}
+                disabled={Boolean(deletingReportId)}
+              >
+                No, keep it
+              </button>
+              <button
+                type="button"
+                className="resume-analyzer__danger-btn"
+                onClick={handleDeleteConfirm}
+                disabled={Boolean(deletingReportId)}
+              >
+                {deletingReportId ? "Deleting..." : "Yes, delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

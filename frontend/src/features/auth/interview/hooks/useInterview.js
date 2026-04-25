@@ -1,5 +1,11 @@
 import { useContext } from "react";
-import { getAllInterviewReports,generateInterviewReport, getInterviewReportById,generateResumePdf } from "../services/interview.api";
+import {
+    deleteInterviewReport,
+    getAllInterviewReports,
+    generateInterviewReport,
+    getInterviewReportById,
+    generateResumePdf,
+} from "../services/interview.api";
 import { InterviewContext } from "../interview.context";
 
 
@@ -72,6 +78,18 @@ export const useInterview = () =>{
         }
      }
 
+    const removeReport = async (interviewId) => {
+        try {
+            const response = await deleteInterviewReport(interviewId);
+            setReports((currentReports) => currentReports.filter((item) => item._id !== interviewId));
+            setReport((currentReport) => (currentReport?._id === interviewId ? null : currentReport));
+            return response.data;
+        } catch (error) {
+            console.error("Delete report error:", error);
+            throw error;
+        }
+    }
+
 
    const getResumePdf = async (interviewReportId) => {
     setIsDownloadingResume(true);
@@ -111,6 +129,7 @@ export const useInterview = () =>{
         getAllReports,
         generateReport,
         getReportById,
+        removeReport,
         getResumePdf,
      }
 }
