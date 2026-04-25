@@ -43,7 +43,7 @@ const IconEye = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
     <circle cx="12" cy="12" r="3" />
-  </svg>
+    </svg>
 );
 
 const IconTrash = () => (
@@ -77,6 +77,44 @@ const IconExit = () => (
     <path d="M21 12H9" />
   </svg>
 );
+
+const parseJsonError = (value) => {
+  if (typeof value !== "string") return null;
+
+  const trimmed = value.trim();
+
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return null;
+  }
+};
+
+const getFriendlyErrorMessage = (error, fallback) => {
+  const parsedMessage = parseJsonError(error?.message);
+  const providerError = parsedMessage?.error ?? error?.error;
+  const message = providerError?.message || error?.userMessage || error?.message || fallback;
+  const statusCode = providerError?.code || error?.statusCode || error?.code;
+  const status = `${providerError?.status || error?.status || ""}`.toLowerCase();
+  const normalizedMessage = `${message}`.trim();
+  const combined = `${status} ${normalizedMessage}`.toLowerCase();
+
+  if (
+    statusCode === 429 ||
+    statusCode === 503 ||
+    combined.includes("high demand") ||
+    combined.includes("unavailable") ||
+    combined.includes("busy")
+  ) {
+    return "The AI assistant is a little busy right now. Please wait a moment and try again.";
+  }
+
+  return normalizedMessage || fallback;
+};
 
 const UploadZone = ({ file, onFile }) => {
   const fileInputRef = useRef(null);
@@ -286,7 +324,7 @@ export default function Home() {
 
       setError("Failed to generate the interview plan. Please try again.");
     } catch (err) {
-      setError(err.message || "Failed to generate the interview plan. Please try again.");
+      setError(getFriendlyErrorMessage(err, "Failed to generate the interview plan. Please try again."));
     }
   };
 
@@ -329,7 +367,7 @@ export default function Home() {
       await removeReport(reportPendingDelete._id);
       setReportPendingDelete(null);
     } catch (err) {
-      setError(err.message || "Failed to delete the report. Please try again.");
+      setError(getFriendlyErrorMessage(err, "Failed to delete the report. Please try again."));
     } finally {
       setDeletingReportId("");
     }

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { GoogleGenAI } from "@google/genai";
 import puppeteer from "puppeteer";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { ApiError } from "../utils/ApiError.js";
 
 
 dotenv.config();
@@ -77,6 +78,61 @@ function parseAiJson(rawText) {
 
 function text(value, fallback) {
     return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function parseJsonString(value) {
+    if (typeof value !== "string") {
+        return null;
+    }
+
+    const trimmed = value.trim();
+
+    if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(trimmed);
+    } catch {
+        return null;
+    }
+}
+
+function extractNestedErrorDetails(error) {
+    const parsedMessage = parseJsonString(error?.message);
+    const providerError = parsedMessage?.error ?? error?.error ?? error;
+
+    return {
+        code: providerError?.code ?? error?.statusCode,
+        status: providerError?.status ?? error?.status,
+        message: providerError?.message ?? error?.message,
+    };
+}
+
+function normalizeAiProviderError(error, actionLabel = "complete this request") {
+    const details = extractNestedErrorDetails(error);
+    const combinedText = `${details.status || ""} ${details.message || ""}`.toLowerCase();
+
+    const isBusyError =
+        details.code === 429 ||
+        details.code === 503 ||
+        combinedText.includes("unavailable") ||
+        combinedText.includes("high demand") ||
+        combinedText.includes("busy") ||
+        combinedText.includes("temporarily") ||
+        combinedText.includes("resource exhausted");
+
+    if (isBusyError) {
+        throw new ApiError(
+            503,
+            `The AI assistant is a little busy right now, so we couldn't ${actionLabel}. Please try again in a moment.`
+        );
+    }
+
+    throw new ApiError(
+        500,
+        `We couldn't ${actionLabel} right now. Please try again shortly.`
+    );
 }
 
 function list(value) {
@@ -265,23 +321,27 @@ Return a single JSON object with this EXACT structure — no additional fields:
 - No trailing commas
 - Must be parseable by JSON.parse()`;
 
-    const response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-lite-preview",
-        contents: prompt,
-    });
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-3.1-flash-lite-preview",
+            contents: prompt,
+        });
 
-    const parsed = parseAiJson(response.text);
-    const data = normalizeInterviewReport(parsed);
+        const parsed = parseAiJson(response.text);
+        const data = normalizeInterviewReport(parsed);
 
-    const validated = interviewReportSchema.safeParse(data);
-    console.log("FINAL DATA BEFORE VALIDATION:", JSON.stringify(data, null, 2));
+        const validated = interviewReportSchema.safeParse(data);
+        console.log("FINAL DATA BEFORE VALIDATION:", JSON.stringify(data, null, 2));
 
-    if (!validated.success) {
-        console.error("AI validation errors:", validated.error.flatten());
-        throw new Error("Invalid AI structure");
+        if (!validated.success) {
+            console.error("AI validation errors:", validated.error.flatten());
+            throw new Error("Invalid AI structure");
+        }
+
+        return validated.data;
+    } catch (error) {
+        normalizeAiProviderError(error, "generate your interview plan");
     }
-
-    return validated.data;
 }
 
 
@@ -429,14 +489,20 @@ Return ONLY raw HTML starting with <!DOCTYPE html> and ending with </html>.
 Absolutely no text, comment, or character before <!DOCTYPE or after </html>.`;
 
             
-    const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
-        config:{
-            responseMimeType: "application/json",
-            responseSchema: zodToJsonSchema(resumePdfSchema),
-        }
-    });
+    let response;
+
+    try {
+        response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: prompt,
+            config:{
+                responseMimeType: "application/json",
+                responseSchema: zodToJsonSchema(resumePdfSchema),
+            }
+        });
+    } catch (error) {
+        normalizeAiProviderError(error, "generate the resume PDF");
+    }
 
 const htmlContent = extractResumeHtml(response);
 const validated = resumePdfSchema.safeParse({ html: htmlContent });
