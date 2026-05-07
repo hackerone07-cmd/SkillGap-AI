@@ -412,7 +412,7 @@ async function generateResumePdf({ jobTitle,resume, jobDescription, selfDescript
 
 ## TASK
 Generate a tailored, one-page resume in clean HTML for the candidate below.
-Output must be valid HTML only — no markdown, no explanations, no code fences, no commentary.
+Output must be valid HTML only —> no markdown, no explanations, no code fences, no commentary.
 
 ## INPUTS
 - Job Title: ${jobTitle}
